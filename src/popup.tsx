@@ -1,7 +1,7 @@
 import { h, render } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { dayjs } from "./libs";
-import { MESSAGE_TYPES, MyEvent, SendMessage } from "./types";
+import { MESSAGE_TYPES, MyEvent } from "./types";
 import { getEvents } from "./utils";
 import { getToken } from "./auth";
 import browser from "webextension-polyfill";
@@ -51,14 +51,6 @@ const Popup = () => {
   return (
     <div className="relative w-[480px] px-3 bg-slate-800">
       <div className="flex items-center justify-end">
-        <a
-          className="btn btn-link"
-          href="https://github.com/ellreka/ext-outlook-cal-opener"
-          target="_blank"
-          rel="noreferrer"
-        >
-          GitHub
-        </a>
         {isLogin ? (
           <div>
             <button className="btn btn-link" onClick={refreshEvents}>
@@ -99,7 +91,7 @@ const Popup = () => {
                 </div>
                 <h2 className="text-sm">{event.subject}</h2>
               </div>
-              {event.meetingUrl && (
+              {event?.meetingUrl && (
                 <a
                   href={event.meetingUrl}
                   target="_blank"
@@ -126,6 +118,16 @@ const Popup = () => {
           );
         })}
       </ul>
+      <div className="flex items-center justify-end">
+        <a
+          className="btn btn-link"
+          href="https://github.com/ellreka/ext-outlook-cal-opener"
+          target="_blank"
+          rel="noreferrer"
+        >
+          github
+        </a>
+      </div>
     </div>
   );
 };

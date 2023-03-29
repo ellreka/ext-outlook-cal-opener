@@ -4,6 +4,7 @@ import { STORAGE_KEYS } from "./types";
 
 const redirectUri = browser.identity.getRedirectURL();
 const scopes = ["User.Read", "Calendars.Read"];
+const tenant = env.TENANT_ID ?? "common";
 
 const createRandomString = (): string => {
   const charset =
@@ -45,7 +46,7 @@ export const getToken = async (interactive: boolean = true) => {
     &redirect_uri=${encodeURIComponent(redirectUri)}
     &scope=${encodeURIComponent(scopes.join(" "))}
     &response_mode=query
-    &prompt=select_account
+    &prompt=consent
     &code_challenge=${codeChallenge}
     &code_challenge_method=S256
     `;
@@ -72,7 +73,7 @@ export const getToken = async (interactive: boolean = true) => {
         );
         const code_verifier = result[STORAGE_KEYS.CODE_VERIFIER];
 
-        const url = `https://login.microsoftonline.com/${env.TENANT_ID}/oauth2/v2.0/token`;
+        const url = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`;
         const body = new URLSearchParams({
           client_id: env.CLIENT_ID,
           scope: scopes.join(" "),
@@ -89,18 +90,24 @@ export const getToken = async (interactive: boolean = true) => {
           body,
         }).then((res) => res.json());
         return response;
+      })
+      .catch((e) => {
+        console.error(e);
+        return undefined;
       });
 
+    const token: string | undefined = response?.access_token;
+
     await browser.storage.local.set({
-      [STORAGE_KEYS.TOKEN]: response.access_token,
+      [STORAGE_KEYS.TOKEN]: token,
     });
 
-    return response?.access_token as string | undefined;
+    return token;
   }
 };
 
 export const signOut = async () => {
-  const url = `https://login.microsoftonline.com/${env.TENANT_ID}/oauth2/v2.0/logout`;
+  const url = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/logout`;
   const body = new URLSearchParams({
     client_id: env.CLIENT_ID,
     post_logout_redirect_uri: redirectUri,

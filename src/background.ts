@@ -8,7 +8,7 @@ import {
   SendMessage,
   STORAGE_KEYS,
 } from "./types";
-import { clearEvents, getEvent, setEvents } from "./utils";
+import { clearEvents, getEvent, getMeetingUrl, setEvents } from "./utils";
 import browser from "webextension-polyfill";
 import { config } from "./config";
 import { getToken, signOut } from "./auth";
@@ -44,12 +44,13 @@ const getCalendarEvents = async () => {
       return true;
     })
     .map((event, i) => {
+      const meetingUrl = getMeetingUrl(event);
       return {
         id: event.id ?? String(i),
         subject: event.subject ?? "",
         start: dayjs.utc(event.start?.dateTime).tz().toISOString(),
         end: dayjs.utc(event.end?.dateTime).tz().toISOString(),
-        meetingUrl: event.onlineMeeting?.joinUrl ?? undefined,
+        meetingUrl,
       };
     })
     .sort((a, b) => {
@@ -92,7 +93,6 @@ const updateEvents = async () => {
 browser.alarms.onAlarm.addListener(async (alarm) => {
   switch (alarm.name) {
     case ALARMS_TYPES.UPDATE_EVENTS:
-      console.log(alarm);
       await updateEvents();
       break;
     default:
@@ -130,7 +130,7 @@ browser.runtime.onInstalled.addListener(async () => {
 });
 
 const init = async () => {
-  const token = await getToken();
+  const token = await getToken(false);
   if (token != null) {
     await updateEvents();
   }
