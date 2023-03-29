@@ -1,0 +1,16 @@
+{
+  "name": "outlook-cal-opener",
+  "version": "0.0.1",
+  "description": "Automatically open outlook meeting links in the browser",
+  "background": {
+    "service_worker": "build/background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "128": "icon-128.png"
+  },
+  "manifest_version": 3,
+  "permissions": ["alarms", "storage", "identity"]
+}
