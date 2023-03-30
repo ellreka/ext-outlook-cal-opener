@@ -1,7 +1,7 @@
 {
   "name": "outlook-cal-opener",
   "version": "0.0.1",
-  "description": "Automatically open outlook meeting links in the browser",
+  "description": "Automatically opens the meeting URL from an Outlook Calendar event.",
   "background": {
     "service_worker": "build/background.js"
   },

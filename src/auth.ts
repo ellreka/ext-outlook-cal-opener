@@ -1,6 +1,7 @@
 import { env } from "./env";
 import browser from "webextension-polyfill";
-import { STORAGE_KEYS } from "./types";
+import { GetTokenResponse, STORAGE_KEYS } from "./types";
+import { storages } from "./storage";
 
 const redirectUri = browser.identity.getRedirectURL();
 const scopes = ["User.Read", "Calendars.Read"];
@@ -27,13 +28,13 @@ const createCodeChallenge = async (verifier: string): Promise<string> => {
   return base64UrlDigest;
 };
 
-export const getToken = async (interactive: boolean = true) => {
-  const storage = await browser.storage.local.get(STORAGE_KEYS.TOKEN);
-  const savedToken: string | undefined = storage[STORAGE_KEYS.TOKEN];
-
+export const getToken = async (
+  interactive: boolean = true
+): Promise<GetTokenResponse | undefined> => {
+  const token = await storages.getToken();
   // トークンが保存されていればそれを返す
-  if (savedToken) {
-    return savedToken;
+  if (token) {
+    return token;
   } else {
     const codeVerifier = createRandomString();
     const codeChallenge = await createCodeChallenge(codeVerifier);
@@ -51,9 +52,7 @@ export const getToken = async (interactive: boolean = true) => {
     &code_challenge_method=S256
     `;
 
-    await browser.storage.local.set({
-      [STORAGE_KEYS.CODE_VERIFIER]: codeVerifier,
-    });
+    await storages.setCodeVerifier(codeVerifier);
 
     const response = await browser.identity
       .launchWebAuthFlow({
@@ -65,13 +64,11 @@ export const getToken = async (interactive: boolean = true) => {
           console.error(browser.runtime.lastError);
           return;
         }
-        if (redirectUrl == null) return;
         const code = new URL(redirectUrl).searchParams.get("code");
+
         if (code == null) return;
-        const result = await browser.storage.local.get(
-          STORAGE_KEYS.CODE_VERIFIER
-        );
-        const code_verifier = result[STORAGE_KEYS.CODE_VERIFIER];
+
+        const codeVerifier = await storages.getCodeVerifier();
 
         const url = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`;
         const body = new URLSearchParams({
@@ -80,7 +77,7 @@ export const getToken = async (interactive: boolean = true) => {
           code,
           redirect_uri: redirectUri,
           grant_type: "authorization_code",
-          code_verifier: code_verifier,
+          code_verifier: codeVerifier ?? "",
         });
         const response = await fetch(url, {
           method: "POST",
@@ -96,13 +93,39 @@ export const getToken = async (interactive: boolean = true) => {
         return undefined;
       });
 
-    const token: string | undefined = response?.access_token;
+    await storages.setToken(response);
 
-    await browser.storage.local.set({
-      [STORAGE_KEYS.TOKEN]: token,
-    });
+    return response;
+  }
+};
 
+export const refreshToken = async (): Promise<GetTokenResponse | undefined> => {
+  const token = await storages.getToken();
+
+  if (token?.expires_at && token.expires_at > Date.now()) {
     return token;
+  }
+  const refreshToken = token?.refresh_token;
+  if (refreshToken) {
+    const url = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`;
+    const body = new URLSearchParams({
+      client_id: env.CLIENT_ID,
+      scope: scopes.join(" "),
+      refresh_token: refreshToken,
+      redirect_uri: redirectUri,
+      grant_type: "refresh_token",
+    });
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body,
+    }).then((res) => res.json());
+
+    await storages.setToken(response);
+
+    return response;
   }
 };
 

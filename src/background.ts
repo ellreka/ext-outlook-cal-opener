@@ -11,11 +11,9 @@ import {
 import { clearEvents, getEvent, getMeetingUrl, setEvents } from "./utils";
 import browser from "webextension-polyfill";
 import { config } from "./config";
-import { getToken, signOut } from "./auth";
+import { getToken, refreshToken, signOut } from "./auth";
 
-const getCalendarEvents = async () => {
-  const token = await getToken();
-  if (token == null) throw new Error("Token is null");
+const getCalendarEvents = async (token: string) => {
   const client = Client.init({
     authProvider: (done) => {
       done(null, token);
@@ -59,8 +57,8 @@ const getCalendarEvents = async () => {
   return events;
 };
 
-const updateEvents = async () => {
-  const events = await getCalendarEvents();
+const updateEvents = async (token: string) => {
+  const events = await getCalendarEvents(token);
   await setEvents(events);
   for (const event of events) {
     const alarm = await browser.alarms.get(event.id);
@@ -91,9 +89,13 @@ const updateEvents = async () => {
 };
 
 browser.alarms.onAlarm.addListener(async (alarm) => {
+  console.table(alarm);
   switch (alarm.name) {
     case ALARMS_TYPES.UPDATE_EVENTS:
-      await updateEvents();
+      const token = await refreshToken();
+      if (token?.access_token != null) {
+        await updateEvents(token.access_token);
+      }
       break;
     default:
       const event = await getEvent(alarm.name);
@@ -106,9 +108,14 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
 
 browser.runtime.onMessage.addListener(async (message: SendMessage, sender) => {
   switch (message.type) {
-    case MESSAGE_TYPES.SIGN_IN:
-      return await updateEvents();
-    case MESSAGE_TYPES.SIGN_OUT:
+    case MESSAGE_TYPES.SIGN_IN: {
+      const token = await getToken(true);
+      if (token?.access_token != null) {
+        return await updateEvents(token.access_token);
+      }
+      return;
+    }
+    case MESSAGE_TYPES.SIGN_OUT: {
       await signOut();
       await browser.storage.local.remove([
         STORAGE_KEYS.TOKEN,
@@ -117,8 +124,14 @@ browser.runtime.onMessage.addListener(async (message: SendMessage, sender) => {
       ]);
       await browser.alarms.clearAll();
       break;
-    case MESSAGE_TYPES.REFRESH_EVENTS:
-      return await updateEvents();
+    }
+    case MESSAGE_TYPES.REFRESH_EVENTS: {
+      const token = await refreshToken();
+      if (token?.access_token != null) {
+        return await updateEvents(token.access_token);
+      }
+      return;
+    }
     default:
       break;
   }
@@ -131,11 +144,11 @@ browser.runtime.onInstalled.addListener(async () => {
 
 const init = async () => {
   const token = await getToken(false);
-  if (token != null) {
-    await updateEvents();
+  if (token?.access_token != null) {
+    await updateEvents(token?.access_token);
   }
   browser.alarms.create(ALARMS_TYPES.UPDATE_EVENTS, {
-    periodInMinutes: 5,
+    periodInMinutes: 1,
   });
 };
 

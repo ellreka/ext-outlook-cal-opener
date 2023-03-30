@@ -25,3 +25,13 @@ export const STORAGE_KEYS = {
   TOKEN: "outlook-cal-opener-token",
   CODE_VERIFIER: "outlook-cal-opener-code-verifier",
 } as const;
+
+export type GetTokenResponse = {
+  access_token: string;
+  expires_in: number;
+  ext_expires_in: number;
+  refresh_token: string;
+  scope: string;
+  token_type: string;
+  expires_at: number; // 期限が切れる時間 current time + expires_in
+};
