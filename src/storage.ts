@@ -6,11 +6,13 @@ export const storages = {
     const res = await browser.storage.local.get(STORAGE_KEYS.TOKEN);
     return res?.[STORAGE_KEYS.TOKEN] as GetTokenResponse | undefined;
   },
-  async setToken(token: GetTokenResponse) {
+  async setToken(token: GetTokenResponse | undefined) {
     const now = Date.now();
     const expiresAt = now + (token?.expires_in ?? 0) * 1000;
     await browser.storage.local.set({
-      [STORAGE_KEYS.TOKEN]: { ...token, expires_at: expiresAt },
+      [STORAGE_KEYS.TOKEN]: token
+        ? { ...token, expires_at: expiresAt }
+        : undefined,
     });
   },
   async getCodeVerifier() {

@@ -116,13 +116,13 @@ browser.runtime.onMessage.addListener(async (message: SendMessage, sender) => {
       return;
     }
     case MESSAGE_TYPES.SIGN_OUT: {
-      await signOut();
       await browser.storage.local.remove([
         STORAGE_KEYS.TOKEN,
         STORAGE_KEYS.EVENTS,
         STORAGE_KEYS.CODE_VERIFIER,
       ]);
       await browser.alarms.clearAll();
+      await signOut();
       break;
     }
     case MESSAGE_TYPES.REFRESH_EVENTS: {
