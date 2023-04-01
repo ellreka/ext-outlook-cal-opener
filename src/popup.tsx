@@ -2,9 +2,9 @@ import { h, render } from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { dayjs } from "./libs";
 import { MESSAGE_TYPES, MyEvent } from "./types";
-import { getEvents } from "./utils";
 import { getToken } from "./auth";
 import browser from "webextension-polyfill";
+import { storages } from "./storage";
 
 const Popup = () => {
   const [isLogin, setIsLogin] = useState(false);
@@ -43,8 +43,8 @@ const Popup = () => {
 
   useEffect(() => {
     (async () => {
-      const ev = await getEvents();
-      setEvents(ev);
+      const ev = await storages.getEvents();
+      setEvents(ev ?? []);
     })();
   }, []);
 

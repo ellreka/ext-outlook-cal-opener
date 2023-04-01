@@ -8,10 +8,11 @@ import {
   SendMessage,
   STORAGE_KEYS,
 } from "./types";
-import { clearEvents, getEvent, getMeetingUrl, setEvents } from "./utils";
+import { getMeetingUrl } from "./utils";
 import browser from "webextension-polyfill";
 import { config } from "./config";
 import { getToken, refreshToken, signOut } from "./auth";
+import { storages } from "./storage";
 
 const getCalendarEvents = async (token: string) => {
   const client = Client.init({
@@ -46,8 +47,8 @@ const getCalendarEvents = async (token: string) => {
       return {
         id: event.id ?? String(i),
         subject: event.subject ?? "",
-        start: dayjs.utc(event.start?.dateTime).tz().toISOString(),
-        end: dayjs.utc(event.end?.dateTime).tz().toISOString(),
+        start: dayjs.utc(event.start?.dateTime).tz().format(),
+        end: dayjs.utc(event.end?.dateTime).tz().format(),
         meetingUrl,
       };
     })
@@ -59,15 +60,14 @@ const getCalendarEvents = async (token: string) => {
 
 const updateEvents = async (token: string) => {
   const events = await getCalendarEvents(token);
-  await setEvents(events);
+  await storages.setEvents(events);
   for (const event of events) {
     const alarm = await browser.alarms.get(event.id);
-
     // Alarmがない場合は作成する
     if (alarm == null) {
       if (event?.meetingUrl == null) continue;
       // 過去のイベントは無視する
-      if (dayjs(event.start).isAfter(dayjs())) {
+      if (dayjs(event.start).subtract(config.offset, "ms").isAfter(dayjs())) {
         browser.alarms.create(event.id, {
           when: dayjs(event.start).valueOf() - config.offset,
         });
@@ -89,7 +89,8 @@ const updateEvents = async (token: string) => {
 };
 
 browser.alarms.onAlarm.addListener(async (alarm) => {
-  console.table(alarm);
+  const alarms = await browser.alarms.getAll();
+  console.table(alarms);
   switch (alarm.name) {
     case ALARMS_TYPES.UPDATE_EVENTS:
       const token = await refreshToken();
@@ -97,12 +98,23 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
         await updateEvents(token.access_token);
       }
       break;
-    default:
-      const event = await getEvent(alarm.name);
+    default: {
+      const event = await storages.getEvent(alarm.name);
+      await browser.alarms.clear(alarm.name);
       if (event?.meetingUrl) {
-        await browser.tabs.create({ url: event.meetingUrl });
+        // 既に開いていたらupdateする
+        const tabs = await browser.tabs.query({
+          url: event.meetingUrl,
+        });
+        if (tabs.length > 0) {
+          await browser.tabs.update(tabs[0].id, { active: true });
+        } else {
+          await browser.tabs.create({ url: event.meetingUrl });
+        }
+        break;
       }
       break;
+    }
   }
 });
 
@@ -132,14 +144,15 @@ browser.runtime.onMessage.addListener(async (message: SendMessage, sender) => {
       }
       return;
     }
-    default:
+    default: {
       break;
+    }
   }
 });
 
 browser.runtime.onInstalled.addListener(async () => {
   await browser.alarms.clearAll();
-  await clearEvents();
+  await storages.clearEvents();
 });
 
 const init = async () => {

@@ -5,7 +5,7 @@ import { storages } from "./storage";
 
 const redirectUri = browser.identity.getRedirectURL();
 const scopes = ["User.Read", "Calendars.Read"];
-const tenant = env.TENANT_ID ?? "common";
+const tenant = env.TENANT_ID;
 
 const createRandomString = (): string => {
   const charset =

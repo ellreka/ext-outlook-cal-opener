@@ -1,12 +1,13 @@
-import dayjs from "dayjs";
+import _dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
+_dayjs.extend(utc);
+_dayjs.extend(timezone);
 
-const userTimezone = dayjs.tz.guess();
+const userTimezone = _dayjs.tz.guess();
+_dayjs.tz.setDefault(userTimezone);
 
-dayjs.tz.setDefault(userTimezone);
+const dayjs = _dayjs;
 
 export { dayjs };

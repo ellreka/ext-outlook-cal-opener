@@ -28,6 +28,10 @@ export const storages = {
     const res = await browser.storage.local.get(STORAGE_KEYS.EVENTS);
     return res?.[STORAGE_KEYS.EVENTS] as MyEvent[] | undefined;
   },
+  async getEvent(id: string) {
+    const events = await storages.getEvents();
+    return events?.find((event) => event.id === id);
+  },
   async setEvents(events: MyEvent[]) {
     await browser.storage.local.set({ [STORAGE_KEYS.EVENTS]: events });
   },
