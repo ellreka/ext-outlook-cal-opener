@@ -4,7 +4,11 @@ dotenv.config();
 
 esbuild
   .build({
-    entryPoints: ["./src/background.ts", "./src/popup.tsx"],
+    entryPoints: [
+      "./src/background.ts",
+      "./src/popup.tsx",
+      "./src/options.tsx",
+    ],
     bundle: true,
     minify: true,
     watch: process.argv.includes("--watch"),

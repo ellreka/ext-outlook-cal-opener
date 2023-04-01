@@ -10,7 +10,6 @@ import {
 } from "./types";
 import { getMeetingUrl } from "./utils";
 import browser from "webextension-polyfill";
-import { config } from "./config";
 import { getToken, refreshToken, signOut } from "./auth";
 import { storages } from "./storage";
 
@@ -61,25 +60,25 @@ const getCalendarEvents = async (token: string) => {
 const updateEvents = async (token: string) => {
   const events = await getCalendarEvents(token);
   await storages.setEvents(events);
+
+  const config = await storages.getConfig();
+  const offset = config?.offset ?? 1000 * 60;
   for (const event of events) {
     const alarm = await browser.alarms.get(event.id);
     // Alarmがない場合は作成する
     if (alarm == null) {
       if (event?.meetingUrl == null) continue;
       // 過去のイベントは無視する
-      if (dayjs(event.start).subtract(config.offset, "ms").isAfter(dayjs())) {
+      if (dayjs(event.start).subtract(offset, "ms").isAfter(dayjs())) {
         browser.alarms.create(event.id, {
-          when: dayjs(event.start).valueOf() - config.offset,
+          when: dayjs(event.start).valueOf() - offset,
         });
       }
       // Alarmがある場合は時間が変わっていたら更新する
-    } else if (
-      alarm.scheduledTime + config.offset !==
-      dayjs(event.start).valueOf()
-    ) {
+    } else if (alarm.scheduledTime + offset !== dayjs(event.start).valueOf()) {
       await browser.alarms.clear(event.id);
       browser.alarms.create(event.id, {
-        when: dayjs(event.start).valueOf() - config.offset,
+        when: dayjs(event.start).valueOf() - offset,
       });
     } else {
       // No Change
@@ -89,8 +88,6 @@ const updateEvents = async (token: string) => {
 };
 
 browser.alarms.onAlarm.addListener(async (alarm) => {
-  const alarms = await browser.alarms.getAll();
-  console.table(alarms);
   switch (alarm.name) {
     case ALARMS_TYPES.UPDATE_EVENTS:
       const token = await refreshToken();
@@ -150,6 +147,15 @@ browser.runtime.onMessage.addListener(async (message: SendMessage, sender) => {
   }
 });
 
+browser.storage.onChanged.addListener(async (changes) => {
+  if (changes[STORAGE_KEYS.CONFIG]) {
+    const token = await getToken(false);
+    if (token?.access_token != null) {
+      await updateEvents(token.access_token);
+    }
+  }
+});
+
 browser.runtime.onInstalled.addListener(async () => {
   await browser.alarms.clearAll();
   await storages.clearEvents();
@@ -158,10 +164,14 @@ browser.runtime.onInstalled.addListener(async () => {
 const init = async () => {
   const token = await getToken(false);
   if (token?.access_token != null) {
-    await updateEvents(token?.access_token);
+    await updateEvents(token.access_token);
   }
   browser.alarms.create(ALARMS_TYPES.UPDATE_EVENTS, {
     periodInMinutes: 1,
+  });
+
+  await storages.setConfig({
+    offset: 1000 * 60,
   });
 };
 

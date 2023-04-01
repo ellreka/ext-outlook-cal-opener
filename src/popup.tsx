@@ -119,6 +119,12 @@ const Popup = () => {
         })}
       </ul>
       <div className="flex items-center justify-end">
+        <button
+          className="btn btn-link"
+          onClick={() => browser.runtime.openOptionsPage()}
+        >
+          options
+        </button>
         <a
           className="btn btn-link"
           href="https://github.com/ellreka/ext-outlook-cal-opener"

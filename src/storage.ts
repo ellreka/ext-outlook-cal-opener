@@ -1,5 +1,5 @@
 import browser from "webextension-polyfill";
-import { GetTokenResponse, MyEvent, STORAGE_KEYS } from "./types";
+import { Config, GetTokenResponse, MyEvent, STORAGE_KEYS } from "./types";
 
 export const storages = {
   async getToken() {
@@ -37,5 +37,12 @@ export const storages = {
   },
   async clearEvents() {
     await browser.storage.local.remove(STORAGE_KEYS.EVENTS);
+  },
+  async getConfig() {
+    const res = await browser.storage.local.get(STORAGE_KEYS.CONFIG);
+    return res?.[STORAGE_KEYS.CONFIG] as Config | undefined;
+  },
+  async setConfig(config: Config) {
+    await browser.storage.local.set({ [STORAGE_KEYS.CONFIG]: config });
   },
 };

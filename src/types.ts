@@ -24,6 +24,7 @@ export const STORAGE_KEYS = {
   EVENTS: "outlook-cal-opener-events",
   TOKEN: "outlook-cal-opener-token",
   CODE_VERIFIER: "outlook-cal-opener-code-verifier",
+  CONFIG: "outlook-cal-opener-config",
 } as const;
 
 export type GetTokenResponse = {
@@ -34,4 +35,8 @@ export type GetTokenResponse = {
   scope: string;
   token_type: string;
   expires_at: number; // 期限が切れる時間 current time + expires_in
+};
+
+export type Config = {
+  offset: number;
 };

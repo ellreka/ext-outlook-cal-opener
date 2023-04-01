@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "concurrently \"rimraf public/build && node esbuild.js --watch\" \"pnpm run dev:css\"",
     "build": "rimraf public/build && NODE_ENV=production node esbuild.js && pnpm run build:css",
-    "dev:css": "tailwindcss -i ./src/popup.css -o ./public/build/popup.css --watch",
-    "build:css": "tailwindcss -i ./src/popup.css -o ./public/build/popup.css --minify",
+    "dev:css": "tailwindcss -i ./src/style.css -o ./public/build/style.css --watch",
+    "build:css": "tailwindcss -i ./src/style.css -o ./public/build/style.css --minify",
     "build:zip": "pnpm build && zip -r build.zip public/",
     "fmt": "rome format ./src",
     "fmt:write": "rome format ./src --write"
