@@ -16,5 +16,6 @@
     "128": "icon-128.png"
   },
   "manifest_version": 3,
-  "permissions": ["alarms", "storage", "identity", "tabs"]
+  "permissions": ["alarms", "storage", "identity", "tabs"],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtFmebKMHQt5TbuFnwdqhitPZWyHB6dYtFn3HuiCDF4UhfciqECAXmGqYUiXaXnMlVd1QlfwBPfUFZRXBp2s0vpTpngYNb2iwf7q3JhhWIkUILPmdQjgEPiouV7s73lmJ9unNUbYuICUez7C4YGJ2c9cYi9z5Bz7N3CXaxSPbMXREwEuVtPrSLkNH5nOMxxvVvxeGwIAWABG8M3JC+guLbJfWKH8q78kxb3h4WcLN1X82ThN75iF80ObGYzja4dmqN3oQme89Z463WFxHP/pNfuXbQueHsH5Qb9CLv0h1tyGal5k5jXemSvJ+QkCigd0C77X1YsHeuRJbBCeHb6t5twIDAQAB"
 }

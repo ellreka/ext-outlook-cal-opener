@@ -1,6 +1,6 @@
 import { env } from "./env";
 import browser from "webextension-polyfill";
-import { GetTokenResponse, STORAGE_KEYS } from "./types";
+import { GetTokenResponse } from "./types";
 import { storages } from "./storage";
 
 const redirectUri = browser.identity.getRedirectURL();
@@ -89,7 +89,6 @@ export const getToken = async (
         return response;
       })
       .catch((e) => {
-        console.error(e);
         return undefined;
       });
 
