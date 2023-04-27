@@ -14,12 +14,9 @@
     "fmt:write": "rome format ./src --write"
   },
   "devDependencies": {
-    "@azure/msal-browser": "^2.34.0",
-    "@azure/msal-node": "^1.16.0",
     "@microsoft/microsoft-graph-client": "^3.0.5",
     "@microsoft/microsoft-graph-types": "^2.26.0",
     "@types/chrome": "^0.0.197",
-    "@types/node": "^18.15.9",
     "@types/webextension-polyfill": "^0.9.2",
     "autoprefixer": "^10.4.14",
     "concurrently": "^7.6.0",

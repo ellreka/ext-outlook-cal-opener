@@ -33,7 +33,7 @@ export const getToken = async (
 ): Promise<GetTokenResponse | undefined> => {
   const token = await storages.getToken();
   // トークンが保存されていればそれを返す
-  if (token) {
+  if (token?.access_token) {
     return token;
   } else {
     const codeVerifier = createRandomString();
@@ -124,6 +124,9 @@ export const refreshToken = async (): Promise<GetTokenResponse | undefined> => {
 
     await storages.setToken(response);
 
+    return response;
+  } else {
+    const response = await getToken();
     return response;
   }
 };

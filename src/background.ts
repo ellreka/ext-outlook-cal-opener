@@ -88,13 +88,15 @@ const updateEvents = async (token: string) => {
 };
 
 browser.alarms.onAlarm.addListener(async (alarm) => {
+  console.table(alarm);
   switch (alarm.name) {
-    case ALARMS_TYPES.UPDATE_EVENTS:
+    case ALARMS_TYPES.UPDATE_EVENTS: {
       const token = await refreshToken();
       if (token?.access_token != null) {
         await updateEvents(token.access_token);
       }
       break;
+    }
     default: {
       const event = await storages.getEvent(alarm.name);
       await browser.alarms.clear(alarm.name);
@@ -113,6 +115,11 @@ browser.alarms.onAlarm.addListener(async (alarm) => {
       break;
     }
   }
+});
+
+// on sleep
+browser.idle.onStateChanged.addListener(async (state) => {
+  console.log(state);
 });
 
 browser.runtime.onMessage.addListener(async (message: SendMessage, sender) => {

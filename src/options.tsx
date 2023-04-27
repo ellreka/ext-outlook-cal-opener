@@ -3,6 +3,13 @@ import { useEffect, useState } from "preact/hooks";
 import { storages } from "./storage";
 import { Config } from "./types";
 
+const offsets = Array.from({ length: 15 }, (_, i) => i + 1).map((i) => {
+  return {
+    minute: i,
+    ms: i * 60 * 1000,
+  };
+});
+
 const Options = () => {
   const [config, setConfig] = useState<Config | undefined>(undefined);
 
@@ -22,20 +29,35 @@ const Options = () => {
     <div className="relative w-[480px] px-3 bg-slate-800 p-5">
       <div className="form-control">
         <label className="label">
-          <span className="label-text">Offset (ms)</span>
+          <span className="label-text">Offset (minute)</span>
         </label>
-        <input
+        <select
+          className="select select-bordered w-full max-w-xs"
+          value={config?.offset}
+          onChange={(e) => {
+            setConfig((prev) => {
+              return { ...prev, offset: Number(e.currentTarget.value) };
+            });
+          }}
+        >
+          {offsets.map((offset) => (
+            <option value={offset.ms * 60 * 1000}>{offset.minute}</option>
+          ))}
+        </select>
+
+        {/* <input
           type="number"
           value={config?.offset}
           className="input input-bordered w-full max-w-xs"
           onChange={(e) => {
             setConfig((prev) => {
-              return { ...prev, offset: e.currentTarget.valueAsNumber };
+              const ms = e.currentTarget.valueAsNumber * 60 * 1000;
+              return { ...prev, offset: ms };
             });
           }}
-        />
+        /> */}
       </div>
-      <button className="btn btn-primary mt-5" onClick={save}>
+      <button className="btn btn-primary mt-5 btn-sm" onClick={save}>
         Save
       </button>
     </div>
